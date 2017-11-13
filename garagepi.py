@@ -10,7 +10,7 @@ def print_error(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
-if not 1 <= len(sys.argv) <= 2:
+if len(sys.argv) != 2:
     print(
         "Usage:\n"
         "garagepi <keyfile>"
