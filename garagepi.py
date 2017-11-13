@@ -1,4 +1,3 @@
-from __future__ import print_function
 import bluetooth
 from Crypto.PublicKey import RSA
 import errno
@@ -27,7 +26,7 @@ def load_keyfile(keyfile):
         with open(keyfile, "r+") as f:
             for line in f:
                 if is_valid_key(line):
-                    keys.append()
+                    keys.append(line)
         return keys
     except IOError as e:
         print_error(e)
@@ -38,4 +37,3 @@ trusted_keys = load_keyfile(sys.argv[0])
 
 if trusted_keys is None:
     exit(errno.EACCES)
-
