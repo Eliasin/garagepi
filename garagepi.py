@@ -1,4 +1,5 @@
 import bluetooth
+import pem
 from Crypto.PublicKey import RSA
 import errno
 import sys
@@ -16,17 +17,11 @@ if len(sys.argv) <= 1 or len(sys.argv) >= 2:
     exit(0)
 
 
-def is_valid_key(k):
-    pass
-
-
 def load_keyfile(keyfile):
-    keys = []
     try:
         with open(keyfile, "r+") as f:
-            for line in f:
-                if is_valid_key(line):
-                    keys.append(line)
+            keys = pem.parse_file(keyfile)
+        keys = list(map((lambda x: RSA.importKey(x)), keys))
         return keys
     except IOError as e:
         print_error(e)
