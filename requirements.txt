@@ -1,0 +1,3 @@
+pem==17.1.0
+PyBluez==0.22
+pycrypto==2.6.1
