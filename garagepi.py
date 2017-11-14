@@ -31,3 +31,9 @@ try:
 except IOError as e:
     print(e)
     exit(errno.EACCES)
+
+server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+server_sock.bind(("", bluetooth.PORT_ANY))
+server_sock.listen(1)
+
+bluetooth.advertise_service(server_sock, "garagepiService")
