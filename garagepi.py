@@ -10,7 +10,7 @@ def print_error(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
-if len(sys.argv) != 2:
+if len(sys.argv) != 1:
     print(
         "Usage:\n"
         "garagepi <keyfile>"
@@ -32,8 +32,13 @@ except IOError as e:
     print(e)
     exit(errno.EACCES)
 
-server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-server_sock.bind(("", bluetooth.PORT_ANY))
+server_sock = bluetooth.BluetoothSocket(bluetooth.L2CAP)
+port = 0x1003
+server_sock.bind(("", port))
 server_sock.listen(1)
 
-bluetooth.advertise_service(server_sock, "garagepiService")
+while True:
+    client_sock, client_address = server_sock.accept()
+    print("Accepted connection from {}".format(client_address))
+    client_sock.close()
+
