@@ -1,8 +1,8 @@
 import bluetooth
 import pem
-from Crypto.PublicKey import RSA
 import errno
 import sys
+import bcrypt
 from typing import List
 
 
@@ -19,11 +19,15 @@ if len(sys.argv) != 1:
 
 
 # noinspection PyProtectedMember
-def load_keyfile(keyfile: str) -> List[RSA._RSAobj]:
+def load_keyfile(keyfile: str) -> List[str]:
     keys = pem.parse_file(keyfile)
-    keys = list(map((lambda x: RSA.importKey(x)), keys))
     print("Successfully loaded keyfile {}".format(keyfile))
     return keys
+
+
+def verify_challenge(response: str, salt: str, key: str):
+    correct_response = bcrypt.hashpw(key, salt)
+    return bcrypt.checkpw(response, correct_response)
 
 
 try:
@@ -32,10 +36,11 @@ except IOError as e:
     print(e)
     exit(errno.EACCES)
 
+uuid = "9d298d8d-06b4-4da5-b913-0440aa7b4c70"
 server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 server_sock.bind(("", 0))
 server_sock.listen(1)
-bluetooth.advertise_service(server_sock, "garagepi")
+bluetooth.advertise_service(server_sock, "garagepi", uuid)
 
 while True:
     client_sock, client_address = server_sock.accept()
