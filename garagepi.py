@@ -32,13 +32,12 @@ except IOError as e:
     print(e)
     exit(errno.EACCES)
 
-server_sock = bluetooth.BluetoothSocket(bluetooth.L2CAP)
-port = 0x1003
-server_sock.bind(("", port))
+server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+server_sock.bind(("", 0))
 server_sock.listen(1)
+bluetooth.advertise_service(server_sock, "garagepi")
 
 while True:
     client_sock, client_address = server_sock.accept()
     print("Accepted connection from {}".format(client_address))
     client_sock.close()
-
