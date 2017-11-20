@@ -60,11 +60,17 @@ def main():
         client_sock.send(salt)
         print("Sent challenge of {} to {}.".format(salt, client_address))
 
-        client_response = client_sock.recv(60)
-        if client_response is not None and verify_challenge(client_response, salt, trusted_keys):
-            print("Client {} completed challenge of {}.".format(client_address, salt))
-            open_door()
-        else:
-            print("Client {} failed challenge of {}.".format(client_address, salt))
+        try:
+            client_response = client_sock.recv(60)
+            if verify_challenge(client_response, salt, trusted_keys):
+                print("Client {} completed challenge of {}.".format(client_address, salt))
+                open_door()
+            else:
+                print("Client {} failed challenge of {}.".format(client_address, salt))
+        except bluetooth.btcommon.BluetoothError:
+            print("Client {} timed out on challenge of {}.".format(client_address, salt))
 
         client_sock.close()
+
+
+main()
