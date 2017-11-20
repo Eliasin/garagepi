@@ -27,8 +27,8 @@ def load_keyfile(keyfile: str) -> List[str]:
 
 def verify_challenge(response: str, salt: str, keys: List[str]):
     for key in keys:
-        correct_response = bcrypt.hashpw(key, salt)
-        if bcrypt.checkpw(response, correct_response):
+        correct_response = bcrypt.hashpw(key.encode(), salt)
+        if bcrypt.checkpw(response.encode(), correct_response):
             return True
     return False
 
