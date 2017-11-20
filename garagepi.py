@@ -41,7 +41,7 @@ def main():
     try:
         trusted_keys = load_keyfile(sys.argv[0])
     except IOError as e:
-        print(e)
+        print_error(e)
         trusted_keys = []
         exit(errno.EACCES)
 
