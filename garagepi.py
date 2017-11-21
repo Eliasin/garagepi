@@ -1,5 +1,4 @@
 import bluetooth
-import pem
 import errno
 import sys
 import bcrypt
@@ -20,7 +19,8 @@ if len(sys.argv) != 1:
 
 # noinspection PyProtectedMember
 def load_keyfile(keyfile: str) -> List[str]:
-    keys = pem.parse_file(keyfile)
+    with open(keyfile, "r") as f:
+        keys = [key for key in f]
     print("Successfully loaded keyfile {}".format(keyfile))
     return keys
 
