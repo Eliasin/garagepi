@@ -9,7 +9,7 @@ def print_error(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
-if len(sys.argv) != 1:
+if len(sys.argv) > 2:
     print(
         "Usage:\n"
         "garagepi <keyfile>"
@@ -19,7 +19,7 @@ if len(sys.argv) != 1:
 
 # noinspection PyProtectedMember
 def load_keyfile(keyfile: str) -> List[str]:
-    with open(keyfile, "r") as f:
+    with open(keyfile, "a+") as f:
         keys = [key for key in f]
     print("Successfully loaded keyfile {}".format(keyfile))
     return keys
@@ -39,7 +39,10 @@ def open_door():
 
 def main():
     try:
-        trusted_keys = load_keyfile(sys.argv[0])
+        if len(sys.argv) == 1:
+            trusted_keys = load_keyfile("keyfile.txt")
+        else:
+            trusted_keys = load_keyfile(sys.argv[0])
     except IOError as e:
         print_error(e)
         trusted_keys = []
