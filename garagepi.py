@@ -18,7 +18,6 @@ if len(sys.argv) > 2:
     exit(0)
 
 
-# noinspection PyProtectedMember
 def load_keyfile(keyfile: str) -> List[str]:
     with open(keyfile, "a+") as f:
         f.seek(0)
