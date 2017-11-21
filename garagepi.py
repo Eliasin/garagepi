@@ -2,6 +2,7 @@ import bluetooth
 import errno
 import sys
 import bcrypt
+import os
 from typing import List
 
 
@@ -26,15 +27,19 @@ def load_keyfile(keyfile: str) -> List[str]:
     return keys
 
 
-def verify_challenge(response: str, keys: List[str]) -> bool:
+def verify_challenge(response: str, challenge: bytes, keys: List[str]) -> bool:
     for key in keys:
-        if bcrypt.checkpw(key.encode(), response):
+        if bcrypt.checkpw((key.encode('utf-8') + challenge), response):
             return True
     return False
 
 
 def open_door():
     pass
+
+
+def get_random_bytes(n: int) -> bytes:
+    return os.urandom(n)
 
 
 def main():
@@ -59,20 +64,20 @@ def main():
         client_sock.settimeout(20)
         print("Accepted connection from {}".format(client_address))
 
-        salt = bcrypt.gensalt(prefix=b"2a")
-        client_sock.send(salt)
-        print("Sent challenge of {} to {}.".format(salt, client_address))
+        challenge = bcrypt.gensalt()
+        client_sock.send(challenge)
+        print("Sent challenge of {} to {}.".format(challenge, client_address))
 
         try:
             client_response = client_sock.recv(60)
-            if verify_challenge(client_response, trusted_keys):
-                print("Client {} completed challenge of {}.".format(client_address, salt))
+            if verify_challenge(client_response, challenge, trusted_keys):
+                print("Client {} completed challenge of {}.".format(client_address, challenge))
                 open_door()
             else:
-                print("Client {} failed challenge of {}.".format(client_address, salt))
+                print("Client {} failed challenge of {}.".format(client_address, challenge))
         except bluetooth.btcommon.BluetoothError as e:
             print_error(e)
-            print("Client {} timed out on challenge of {}.".format(client_address, salt))
+            print("Client {} timed out on challenge of {}.".format(client_address, challenge))
 
         client_sock.close()
 
