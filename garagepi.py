@@ -11,6 +11,7 @@ GPIO.setmode(GPIO.BOARD)
 
 relay_ch1_pin = 37
 GPIO.setup(relay_ch1_pin, GPIO.OUT)
+GPIO.output(relay_ch1_pin, GPIO.HIGH)
 
 
 def print_error(*args, **kwargs) -> None:
