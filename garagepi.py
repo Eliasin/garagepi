@@ -12,6 +12,7 @@ GPIO.setmode(GPIO.BOARD)
 relay_ch1_pin = 37
 GPIO.setup(relay_ch1_pin, GPIO.OUT)
 
+
 def print_error(*args, **kwargs) -> None:
     print(*args, file=sys.stderr, **kwargs)
 
@@ -62,32 +63,32 @@ def main():
         exit(errno.EACCES)
 
     uuid = "9d298d8d-06b4-4da5-b913-0440aa7b4c70"
-    server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-    server_sock.bind(("", 0))
-    server_sock.listen(1)
-    bluetooth.advertise_service(server_sock, "garagepi", uuid)
+    with bluetooth.BluetoothSocket(bluetooth.RFCOMM) as server_sock:
+        server_sock.bind(("", 0))
+        server_sock.listen(1)
+        bluetooth.advertise_service(server_sock, "garagepi", uuid)
 
-    while True:
-        client_sock, client_address = server_sock.accept()
-        client_sock.settimeout(20)
-        print("Accepted connection from {}".format(client_address))
+        while True:
+            with server_sock.accept() as client_sock:
+                client_address = client_sock.getpeername()
+                client_sock.settimeout(20)
+                print("Accepted connection from {}".format(client_address))
 
-        challenge = bcrypt.gensalt()
-        client_sock.send(challenge)
-        print("Sent challenge of {} to {}.".format(challenge, client_address))
+                challenge = bcrypt.gensalt()
+                client_sock.send(challenge)
+                print("Sent challenge of {} to {}.".format(challenge, client_address))
 
-        try:
-            client_response = client_sock.recv(60)
-            if verify_challenge(client_response, challenge, trusted_keys):
-                print("Client {} completed challenge of {}.".format(client_address, challenge))
-                open_door()
-            else:
-                print("Client {} failed challenge of {}.".format(client_address, challenge))
-        except bluetooth.btcommon.BluetoothError as e:
-            print_error(e)
-            print("Client {} timed out on challenge of {}.".format(client_address, challenge))
+                try:
+                    client_response = client_sock.recv(60)
+                    if verify_challenge(client_response, challenge, trusted_keys):
+                        print("Client {} completed challenge of {}.".format(client_address, challenge))
+                        open_door()
+                    else:
+                        print("Client {} failed challenge of {}.".format(client_address, challenge))
+                except bluetooth.btcommon.BluetoothError as e:
+                    print_error(e)
+                    print("Client {} timed out on challenge of {}.".format(client_address, challenge))
 
-        client_sock.close()
 
 try:
     main()
