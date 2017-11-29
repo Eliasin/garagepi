@@ -63,13 +63,16 @@ def main():
         exit(errno.EACCES)
 
     uuid = "9d298d8d-06b4-4da5-b913-0440aa7b4c70"
-    with bluetooth.BluetoothSocket(bluetooth.RFCOMM) as server_sock:
+
+    server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+    try:
         server_sock.bind(("", 0))
         server_sock.listen(1)
         bluetooth.advertise_service(server_sock, "garagepi", uuid)
 
         while True:
-            with server_sock.accept() as client_sock:
+            client_sock, client_address = server_sock.accept()
+            try:
                 client_address = client_sock.getpeername()
                 client_sock.settimeout(20)
                 print("Accepted connection from {}".format(client_address))
@@ -88,6 +91,10 @@ def main():
                 except bluetooth.btcommon.BluetoothError as e:
                     print_error(e)
                     print("Client {} timed out on challenge of {}.".format(client_address, challenge))
+            finally:
+                client_sock.close()
+    finally:
+        server_sock.close()
 
 
 try:
