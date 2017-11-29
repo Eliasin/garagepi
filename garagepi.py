@@ -57,7 +57,7 @@ def main():
         if len(sys.argv) == 1:
             trusted_keys = load_keyfile("keyfile.txt")
         else:
-            trusted_keys = load_keyfile(sys.argv[0])
+            trusted_keys = load_keyfile(sys.argv[1])
     except IOError as e:
         print_error(e)
         trusted_keys = []
