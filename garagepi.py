@@ -3,8 +3,14 @@ import errno
 import sys
 import bcrypt
 import os
+import time
+import RPi.GPIO as GPIO
 from typing import List
 
+GPIO.setmode(GPIO.BOARD)
+
+relay_ch1_pin = 37
+GPIO.setup(relay_ch1_pin, GPIO.OUT)
 
 def print_error(*args, **kwargs) -> None:
     print(*args, file=sys.stderr, **kwargs)
@@ -34,7 +40,10 @@ def verify_challenge(response: str, challenge: bytes, keys: List[str]) -> bool:
 
 
 def open_door():
-    pass
+    GPIO.output(relay_ch1_pin, GPIO.LOW)
+    time.sleep(0.5)
+    GPIO.output(relay_ch1_pin, GPIO.HIGH)
+    print("Toggled garage door")
 
 
 def get_random_bytes(n: int) -> bytes:
@@ -80,5 +89,7 @@ def main():
 
         client_sock.close()
 
-
-main()
+try:
+    main()
+except KeyboardInterrupt as e:
+    GPIO.cleanup()
