@@ -58,8 +58,8 @@ def main():
             trusted_keys = load_keyfile("keyfile.txt")
         else:
             trusted_keys = load_keyfile(sys.argv[1])
-    except IOError as e:
-        print_error(e)
+    except IOError as io_error:
+        print_error(io_error)
         trusted_keys = []
         exit(errno.EACCES)
 
@@ -101,5 +101,5 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt as keyboard_interrupt:
         GPIO.cleanup()
