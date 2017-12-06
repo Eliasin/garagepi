@@ -37,7 +37,7 @@ To install bcm2835:
 1. Download the latest version of the library from [here](http://www.airspayce.com/mikem/bcm2835/)
 2. Follow the instructions given on the page
 
-To install pip libraries (You may want to use a [virtualenv](https://virtualenv.pypa.io/en/stable/):
+To install pip libraries (You may want to use a [virtualenv](https://virtualenv.pypa.io/en/stable/)):
 ```
 cd garagepi
 pip3 install -r requirements.txt
