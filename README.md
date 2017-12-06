@@ -75,3 +75,4 @@ Garagepi listens on a bluetooth RFCOMM socket for incoming connections. Once a c
 Garagepi is intended to be used for opening garage doors that are controlled by simply completing a circuit, though it could be used for anything that requires the quick toggling of a relay remotely.
 
 On any garage door opened like this there should be two connection points on the back for wires to be connected. Simply wire one of these points to each point on the relay channel 1, one to the middle and one to the normally closed point.
+![Relay Wiring Example](https://github.com/Eliasin/garagepi/blob/master/relay.jpg)
