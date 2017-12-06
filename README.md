@@ -34,6 +34,6 @@ To install bcm2835:
 
 To install pip libraries:
 ```
-cd garagepi`
+cd garagepi
 pip3 install -r requirements.txt
 ```
