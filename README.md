@@ -15,6 +15,7 @@ Garagepi requires:
 * PyBluez*
 * RPi.GPIO*
 * typing*
+
 Though some of these may be installed be default.
 \*Installed via pip/pip3
 
