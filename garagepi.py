@@ -7,12 +7,6 @@ import time
 import RPi.GPIO as GPIO
 from typing import List
 
-GPIO.setmode(GPIO.BOARD)
-
-relay_ch1_pin = 37
-GPIO.setup(relay_ch1_pin, GPIO.OUT)
-GPIO.output(relay_ch1_pin, GPIO.HIGH)
-
 
 def print_error(*args, **kwargs) -> None:
     print(*args, file=sys.stderr, **kwargs)
@@ -98,6 +92,14 @@ def main():
         server_sock.close()
 
 
+if __name__ == "__main__":
+    GPIO.setmode(GPIO.BOARD)
+
+    relay_ch1_pin = 37
+    GPIO.setup(relay_ch1_pin, GPIO.OUT)
+    GPIO.output(relay_ch1_pin, GPIO.HIGH)
+    
+    
 try:
     main()
 except KeyboardInterrupt as e:
