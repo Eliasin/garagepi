@@ -64,4 +64,14 @@ Run:
 
 `sudo chmod 777 /var/run/sdp`
 
-Note: This will have to be run every time the pi restarts, so you may want to put it in [rc.local](https://www.raspberrypi.org/documentation/linux/usage/rc-local.md)
+Note: This will have to be run every time the pi restarts, so you may want to put it in [rc.local](https://www.raspberrypi.org/documentation/linux/usage/rc-local.md).
+
+## Use
+`python3 garagepi.py [keyfile]`
+
+Garagepi listens on a bluetooth RFCOMM socket for incoming connections. Once a connection has been established, it verifies that the client is in possession of one of the keys listed in the **keyfile** which is by default `keyfile.txt`.
+
+## Wiring
+Garagepi is intended to be used for opening garage doors that are controlled by simply completing a circuit, though it could be used for anything that requires the quick toggling of a relay remotely.
+
+On any garage door opened like this there should be two connection points on the back for wires to be connected. Simply wire one of these points to each point on the relay channel 1, one to the middle and one to the normally closed point.
