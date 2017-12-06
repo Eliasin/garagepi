@@ -7,6 +7,8 @@ import time
 import RPi.GPIO as GPIO
 from typing import List
 
+relay_ch1_pin = 37
+
 
 def print_error(*args, **kwargs) -> None:
     print(*args, file=sys.stderr, **kwargs)
@@ -47,6 +49,10 @@ def get_random_bytes(n: int) -> bytes:
 
 
 def main():
+    GPIO.setmode(GPIO.BOARD)
+
+    GPIO.setup(relay_ch1_pin, GPIO.OUT)
+    GPIO.output(relay_ch1_pin, GPIO.HIGH)
     try:
         if len(sys.argv) == 1:
             trusted_keys = load_keyfile("keyfile.txt")
@@ -93,14 +99,7 @@ def main():
 
 
 if __name__ == "__main__":
-    GPIO.setmode(GPIO.BOARD)
-
-    relay_ch1_pin = 37
-    GPIO.setup(relay_ch1_pin, GPIO.OUT)
-    GPIO.output(relay_ch1_pin, GPIO.HIGH)
-    
-    
-try:
-    main()
-except KeyboardInterrupt as e:
-    GPIO.cleanup()
+    try:
+        main()
+    except KeyboardInterrupt as e:
+        GPIO.cleanup()
