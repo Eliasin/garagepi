@@ -23,17 +23,17 @@ Though some of these may be installed be default.
 ## Installation
 
 ### Installing Dependencies
-First, clone the repo:
+First, clone the repo
 ```
 git clone https://github.com/Eliasin/garagepi.git
 ```
 
-To install wiringPi:
+To install wiringPi
 ```
 sudo apt install wiringpi
 ```
 
-To install bcm2835:
+To install bcm2835
 1. Download the latest version of the library from [here](http://www.airspayce.com/mikem/bcm2835/)
 2. Follow the instructions given on the page
 
@@ -55,12 +55,12 @@ and change
 
 `ExecStart=/usr/lib/bluetooth/bluetoothd`
 
-to:
+to
 
 `ExecStart=/usr/lib/bluetooth/bluetoothd --compat`
 
 ### Changing sdp permissions:
-Run:
+Run
 
 `sudo chmod 777 /var/run/sdp`
 
