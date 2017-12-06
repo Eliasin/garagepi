@@ -44,7 +44,7 @@ pip3 install -r requirements.txt
 ```
 
 ### Workarounds
-Since sdptool in [broken](https://raspberrypi.stackexchange.com/questions/41776/failed-to-connect-to-sdp-server-on-ffffff000000-no-such-file-or-directory) in BlueZ 5, to run the garagepi server, you must use a workaround.
+Since sdptool is [broken](https://raspberrypi.stackexchange.com/questions/41776/failed-to-connect-to-sdp-server-on-ffffff000000-no-such-file-or-directory) in BlueZ 5, to run the garagepi server, you must use a workaround.
 
 #### Running the bluetoothd daemon in compatibility mode:
 Edit the file
