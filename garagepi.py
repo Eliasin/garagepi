@@ -11,6 +11,8 @@ from typing import List
 
 relay_ch1_pin = 37
 
+rekognition = boto3.client("rekognition")
+face_similarity_threshold = 80.0
 
 def print_error(*args, **kwargs) -> None:
     print(*args, file=sys.stderr, **kwargs)
@@ -30,6 +32,23 @@ def load_keyfile(keyfile: str) -> List[str]:
         keys = [key.strip() for key in f]
     print("Successfully loaded keyfile {} with keys {}".format(keyfile, keys))
     return keys
+
+
+def path_to_face(image_path: str):
+    try:
+        with open(image_path, "rb") as image:
+            return image.read()
+    except IOError as image_io_error:
+        return None
+
+
+def verify_face(face, reference) -> bool:
+    response = rekognition.compare_faces(
+        SourceImage={'Bytes': face},
+        TargetImage={'Bytes': reference},
+        SimilarityThreshold=face_similarity_threshold
+    )
+    return len(response["FaceMatches"]) >= 1
 
 
 def verify_challenge(response: str, challenge: bytes, keys: List[str]) -> bool:
