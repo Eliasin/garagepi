@@ -5,6 +5,8 @@ import bcrypt
 import os
 import time
 import RPi.GPIO as GPIO
+import picamera
+import boto3
 from typing import List
 
 relay_ch1_pin = 37
