@@ -78,4 +78,5 @@ On any garage door opened like this there should be two connection points on the
 ![Relay Wiring Example](https://github.com/Eliasin/garagepi/blob/master/relay.jpg)
 
 ## Planned Features
+* Switch to argparser for argument parsing
 * Facial recognition
