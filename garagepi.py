@@ -48,16 +48,17 @@ def path_to_face(image_path: str):
         return None
 
 
-def verify_face(face, reference) -> bool:
+def verify_face(source_faces, target_faces) -> bool:
     try:
         print("Sending AWS Rekognition request")
         response = rekognition.compare_faces(
-            SourceImage={'Bytes': face},
-            TargetImage={'Bytes': reference},
+            SourceImage={'Bytes': source_faces},
+            TargetImage={'Bytes': target_faces},
             SimilarityThreshold=face_similarity_threshold
         )
         return len(response["FaceMatches"]) >= 1
-    except ClientError:
+    except ClientError as e:
+        print_error(e)
         return False
 
 
