@@ -10,6 +10,7 @@ import boto3
 from typing import List
 
 relay_ch1_pin = 37
+button_input_pin = 16
 
 rekognition = boto3.client("rekognition")
 face_similarity_threshold = 80.0
@@ -43,12 +44,23 @@ def path_to_face(image_path: str):
 
 
 def verify_face(face, reference) -> bool:
-    response = rekognition.compare_faces(
-        SourceImage={'Bytes': face},
-        TargetImage={'Bytes': reference},
-        SimilarityThreshold=face_similarity_threshold
-    )
-    return len(response["FaceMatches"]) >= 1
+    try:
+        response = rekognition.compare_faces(
+            SourceImage={'Bytes': face},
+            TargetImage={'Bytes': reference},
+            SimilarityThreshold=face_similarity_threshold
+        )
+        return len(response["FaceMatches"]) >= 1
+    except InvalidParameterException as e:
+        return False
+
+
+def get_camera_byte_data():
+    with picamera.PiCamera() as camera:
+        with io.BytesIO() as image_stream:
+            camera.capture(image_stream, "jpeg")
+            image_stream.seek(0)
+            return image_stream.read()
 
 
 def verify_challenge(response: str, challenge: bytes, keys: List[str]) -> bool:
@@ -69,10 +81,11 @@ def get_random_bytes(n: int) -> bytes:
     return os.urandom(n)
 
 
-def main():
+def main() -> None:
     GPIO.setmode(GPIO.BOARD)
 
     GPIO.setup(relay_ch1_pin, GPIO.OUT)
+    GPIO.setup(button_input_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.output(relay_ch1_pin, GPIO.HIGH)
     try:
         if len(sys.argv) == 1:
@@ -124,3 +137,4 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt as keyboard_interrupt:
         GPIO.cleanup()
+        exit()
