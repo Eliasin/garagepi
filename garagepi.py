@@ -7,11 +7,15 @@ import time
 import RPi.GPIO as GPIO
 import picamera
 import boto3
+from botocore.exceptions import ClientError
 from typing import List
 import select
+import io
 
 relay_ch1_pin = 37
 button_input_pin = 16
+
+select_timeout = 0.2
 
 rekognition = boto3.client("rekognition")
 face_similarity_threshold = 80.0
@@ -46,13 +50,14 @@ def path_to_face(image_path: str):
 
 def verify_face(face, reference) -> bool:
     try:
+        print("Sending AWS Rekognition request")
         response = rekognition.compare_faces(
             SourceImage={'Bytes': face},
             TargetImage={'Bytes': reference},
             SimilarityThreshold=face_similarity_threshold
         )
         return len(response["FaceMatches"]) >= 1
-    except InvalidParameterException as e:
+    except ClientError:
         return False
 
 
@@ -62,6 +67,10 @@ def get_camera_byte_data():
             camera.capture(image_stream, "jpeg")
             image_stream.seek(0)
             return image_stream.read()
+
+
+def verify_camera_face(trusted_faces) -> bool:
+    return verify_face(get_camera_byte_data(), trusted_faces)
 
 
 def verify_challenge(response: str, challenge: bytes, keys: List[str]) -> bool:
@@ -101,6 +110,8 @@ def main() -> None:
     uuid = "9d298d8d-06b4-4da5-b913-0440aa7b4c70"
 
     server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+
+    trusted_faces = path_to_face("trusted_faces.jpg")
     try:
         server_sock.bind(("", 0))
         server_sock.listen(1)
@@ -108,8 +119,21 @@ def main() -> None:
         bluetooth.advertise_service(server_sock, "garagepi", uuid)
         read_sockets = [server_sock]
 
+        last_button_input = False
+        button_input = False
         while True:
-            readable, writable, errored = select.select(read_sockets, [], [])
+            
+            last_button_input = button_input
+            button_input = GPIO.input(16)
+            if button_input == False and last_button_input == True:
+                print("Button input detected")
+                if verify_camera_face(trusted_faces):
+                    print("Face accepted")
+                    open_door()
+                else:
+                    print("Face rejected")
+
+            readable, writable, errored = select.select(read_sockets, [], [], select_timeout)
             for socket in readable:
                 client_sock, client_address = server_sock.accept()
                 try:
