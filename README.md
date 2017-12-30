@@ -15,6 +15,7 @@ Garagepi requires:
 * PyBluez*
 * RPi.GPIO*
 * typing*
+* boto3* 
 
 Though some of these may be installed be default.
 
@@ -42,6 +43,9 @@ To install pip libraries (You may want to use a [virtualenv](https://virtualenv.
 cd garagepi
 pip3 install -r requirements.txt
 ```
+
+### Configuring boto3
+As an interface to AWS, boto3 requires the user to provide credentials. Instructions can be found [here](http://boto3.readthedocs.io/en/latest/guide/configuration.html)
 
 ### Workarounds
 Since sdptool is [broken](https://raspberrypi.stackexchange.com/questions/41776/failed-to-connect-to-sdp-server-on-ffffff000000-no-such-file-or-directory) in BlueZ 5, to run the garagepi server, you must use a workaround.
@@ -79,4 +83,5 @@ On any garage door opened like this there should be two connection points on the
 
 ## Planned Features
 * Switch to argparser for argument parsing
+* Change facial verification to be opt in via command line option
 * Facial recognition
