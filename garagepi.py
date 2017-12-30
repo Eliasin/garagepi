@@ -63,7 +63,7 @@ def verify_face(source_faces, target_faces) -> bool:
 
 
 def get_camera_byte_data():
-    with picamera.PiCamera() as camera:
+    with picamera.PiCamera(resolution=(512, 512)) as camera:
         with io.BytesIO() as image_stream:
             camera.capture(image_stream, "jpeg")
             image_stream.seek(0)
