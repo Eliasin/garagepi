@@ -85,6 +85,9 @@ Garagepi is intended to be used for opening garage doors that are controlled by 
 On any garage door opened like this there should be two connection points on the back for wires to be connected. Simply wire one of these points to each point on the relay channel 1, one to the middle and one to the normally closed point.
 ![Relay Wiring Example](https://github.com/Eliasin/garagepi/blob/master/relay.jpg)
 
+### Facial Verification
+The button used to trigger the camera module should be wired to pin 16 (board notation) and a ground pin. If pin 16 is unavailable for use, feel free to change the definition of `button_input_pin` in the main source file. 
+
 ## Planned Features
 * Switch to argparser for argument parsing
 * Change facial verification to be opt in via command line option
