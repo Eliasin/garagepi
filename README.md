@@ -7,6 +7,10 @@ Bluetooth server application intended for opening garage doors with bluetooth en
 * [Waveshare RPi Relay Board](https://www.waveshare.com/rpi-relay-board.htm)
 * Some wires
 
+### Facial Verification
+* [Camera Module V2](https://www.raspberrypi.org/products/camera-module-v2/)
+* A push button
+
 ## Dependencies
 Garagepi requires:
 * bcm2835
