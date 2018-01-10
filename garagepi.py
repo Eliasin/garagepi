@@ -42,7 +42,7 @@ def path_to_face(image_path: str):
 
 def verify_face(rekognition_client, source_faces, target_faces) -> bool:
     if rekognition_client is None:
-        print("Facial rekognition disabled")
+        print("Facial verification disabled")
         return False
     try:
         print("Sending AWS Rekognition request")
@@ -56,6 +56,22 @@ def verify_face(rekognition_client, source_faces, target_faces) -> bool:
         print_error(e)
         return False
 
+def verify_face_against_bucket(rekognition_client, source_faces, bucket_name, bucket_object) -> bool:
+    if rekognition_client is None:
+        print("Facial verification disabled")
+        return False
+    try:
+        print("Sending AWS Rekognition request")
+        response = rekognition_client.compare_faces(
+                SourceImage={'Bytes': source_faces},
+                TargetImage={'S3Object': {'Bucket':  bucket_name, 'Name': bucket_object}},
+                SimilarityThreshold=face_similarity_threshold
+                )
+        return len(response["FaceMatches"]) >= 1
+    except ClientError as e:
+        print_error(e)
+        return False
+
 
 def get_camera_byte_data():
     with picamera.PiCamera(resolution=(512, 512)) as camera:
@@ -63,6 +79,10 @@ def get_camera_byte_data():
             camera.capture(image_stream, "jpeg")
             image_stream.seek(0)
             return image_stream.read()
+
+
+def verify_camera_face_against_bucket(rekognition_client, bucket_name, bucket_object) ->  bool:
+    return verify_face_against_bucket(rekognition_client, get_camera_byte_data(), bucket_name, bucket_object)
 
 
 def verify_camera_face(rekognition_client, trusted_faces) -> bool:
@@ -92,6 +112,8 @@ def main() -> None:
     parser.add_argument("--keyfile", help="path to keyfile", type=str)
     parser.add_argument("--face", help="enable facial verification", action="store_true")
     parser.add_argument("--trusted_faces", help="path to trusted faces", type=str)
+    parser.add_argument("--bucket_name", help="AWS S3 bucket name for trusted faces", type=str)
+    parser.add_argument("--bucket_object", help="name of object in S3 bucket", type=str)
 
     args = parser.parse_args()
 
@@ -101,7 +123,7 @@ def main() -> None:
     GPIO.setup(button_input_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.output(relay_ch1_pin, GPIO.HIGH)
     try:
-        if args.keyfile != None:
+        if args.keyfile is not None:
             trusted_keys = load_keyfile(args.keyfile)
         else:
             trusted_keys = load_keyfile("keyfile.txt")
@@ -116,12 +138,18 @@ def main() -> None:
 
     rekognition = None
     trusted_faces = None
+    bucket_name = None
+    bucket_object = None
     if args.face:
         rekognition = boto3.client("rekognition")
-        if args.trusted_faces != None:
+        if args.trusted_faces is not None:
             trusted_faces = path_to_face(args.trusted_faces)
         else:
             trusted_faces = path_to_face("trusted_faces.jpg")
+        
+        if args.bucket_name is not None and args.bucket_object is not None:
+            bucket_name = args.bucket_name
+            bucket_object = args.bucket_object
 
     try:
         server_sock.bind(("", 0))
@@ -138,11 +166,18 @@ def main() -> None:
             button_input = GPIO.input(16)
             if button_input == False and last_button_input == True:
                 print("Button input detected")
-                if verify_camera_face(rekognition, trusted_faces):
-                    print("Face accepted")
-                    open_door()
+                if bucket_name is not None:
+                    if verify_camera_face_against_bucket(rekognition, bucket_name, bucket_object):
+                        print("Face accepted")
+                        open_door()
+                    else:
+                        print("Face rejected/AWS error")
                 else:
-                    print("Face rejected/AWS error")
+                    if verify_camera_face(rekognition, trusted_faces):
+                        print("Face accepted")
+                        open_door()
+                    else:
+                        print("Face rejected/AWS error")
 
             readable, writable, errored = select.select(read_sockets, [], [], select_timeout)
             for socket in readable:
