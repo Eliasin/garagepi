@@ -11,6 +11,7 @@ from botocore.exceptions import ClientError
 from typing import List
 import select
 import io
+import argparse
 
 relay_ch1_pin = 37
 button_input_pin = 16
@@ -22,14 +23,6 @@ face_similarity_threshold = 80.0
 
 def print_error(*args, **kwargs) -> None:
     print(*args, file=sys.stderr, **kwargs)
-
-
-if len(sys.argv) > 2:
-    print(
-        "Usage:\n"
-        "garagepi <keyfile>"
-        )
-    exit(0)
 
 
 def load_keyfile(keyfile: str) -> List[str]:
@@ -93,16 +86,21 @@ def get_random_bytes(n: int) -> bytes:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--keyfile", help="path to keyfile", type=str)
+
+    args = parser.parse_args()
+
     GPIO.setmode(GPIO.BOARD)
 
     GPIO.setup(relay_ch1_pin, GPIO.OUT)
     GPIO.setup(button_input_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.output(relay_ch1_pin, GPIO.HIGH)
     try:
-        if len(sys.argv) == 1:
-            trusted_keys = load_keyfile("keyfile.txt")
+        if args.keyfile != None:
+            trusted_keys = load_keyfile(args.keyfile)
         else:
-            trusted_keys = load_keyfile(sys.argv[1])
+            trusted_keys = load_keyfile("keyfile.txt")
     except IOError as io_error:
         print_error(io_error)
         trusted_keys = []
