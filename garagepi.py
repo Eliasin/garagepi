@@ -18,7 +18,6 @@ button_input_pin = 16
 
 select_timeout = 0.2
 
-rekognition = boto3.client("rekognition")
 face_similarity_threshold = 80.0
 
 def print_error(*args, **kwargs) -> None:
@@ -41,10 +40,13 @@ def path_to_face(image_path: str):
         return None
 
 
-def verify_face(source_faces, target_faces) -> bool:
+def verify_face(rekognition_client, source_faces, target_faces) -> bool:
+    if rekognition_client is None:
+        print("Facial rekognition disabled")
+        return False
     try:
         print("Sending AWS Rekognition request")
-        response = rekognition.compare_faces(
+        response = rekognition_client.compare_faces(
             SourceImage={'Bytes': source_faces},
             TargetImage={'Bytes': target_faces},
             SimilarityThreshold=face_similarity_threshold
@@ -63,8 +65,8 @@ def get_camera_byte_data():
             return image_stream.read()
 
 
-def verify_camera_face(trusted_faces) -> bool:
-    return verify_face(get_camera_byte_data(), trusted_faces)
+def verify_camera_face(rekognition_client, trusted_faces) -> bool:
+    return verify_face(rekognition_client, get_camera_byte_data(), trusted_faces)
 
 
 def verify_challenge(response: str, challenge: bytes, keys: List[str]) -> bool:
@@ -88,6 +90,8 @@ def get_random_bytes(n: int) -> bytes:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--keyfile", help="path to keyfile", type=str)
+    parser.add_argument("--face", help="enable facial verification", action="store_true")
+    parser.add_argument("--trusted_faces", help="path to trusted faces", type=str)
 
     args = parser.parse_args()
 
@@ -110,7 +114,15 @@ def main() -> None:
 
     server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 
-    trusted_faces = path_to_face("trusted_faces.jpg")
+    rekognition = None
+    trusted_faces = None
+    if args.face:
+        rekognition = boto3.client("rekognition")
+        if args.trusted_faces != None:
+            trusted_faces = path_to_face(args.trusted_faces)
+        else:
+            trusted_faces = path_to_face("trusted_faces.jpg")
+
     try:
         server_sock.bind(("", 0))
         server_sock.listen(1)
@@ -126,11 +138,11 @@ def main() -> None:
             button_input = GPIO.input(16)
             if button_input == False and last_button_input == True:
                 print("Button input detected")
-                if verify_camera_face(trusted_faces):
+                if verify_camera_face(rekognition, trusted_faces):
                     print("Face accepted")
                     open_door()
                 else:
-                    print("Face rejected")
+                    print("Face rejected/AWS error")
 
             readable, writable, errored = select.select(read_sockets, [], [], select_timeout)
             for socket in readable:
