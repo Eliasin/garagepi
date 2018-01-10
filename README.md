@@ -7,18 +7,15 @@ Bluetooth server application intended for opening garage doors with bluetooth en
 * [Waveshare RPi Relay Board](https://www.waveshare.com/rpi-relay-board.htm)
 * Some wires
 
+### Facial Verification
+* [Camera Module V2](https://www.raspberrypi.org/products/camera-module-v2/)
+* A push button
+
 ## Dependencies
 Garagepi requires:
 * bcm2835
 * wiringPi
-* bcrypt*
-* PyBluez*
-* RPi.GPIO*
-* typing*
-
-Though some of these may be installed be default.
-
-\*Installed via pip/pip3
+* More (in requirements.txt)
 
 ## Installation
 
@@ -43,6 +40,9 @@ cd garagepi
 pip3 install -r requirements.txt
 ```
 
+### Configuring boto3
+As an interface to AWS, boto3 requires the user to provide credentials. Instructions can be found [here](http://boto3.readthedocs.io/en/latest/guide/configuration.html).
+
 ### Workarounds
 Since sdptool is [broken](https://raspberrypi.stackexchange.com/questions/41776/failed-to-connect-to-sdp-server-on-ffffff000000-no-such-file-or-directory) in BlueZ 5, to run the garagepi server, you must use a workaround.
 
@@ -66,10 +66,23 @@ Run
 
 Note: This will have to be run every time the pi restarts, so you may want to put it in [rc.local](https://www.raspberrypi.org/documentation/linux/usage/rc-local.md).
 
-## Use
-`python3 garagepi.py [keyfile]`
+## Usage
+```
+usage: garagepi.py [-h] [--keyfile KEYFILE] [--face]
+                   [--trusted_faces TRUSTED_FACES] [--bucket_name BUCKET_NAME]
+                   [--bucket_object BUCKET_OBJECT]
 
-Garagepi listens on a bluetooth RFCOMM socket for incoming connections. Once a connection has been established, it verifies that the client is in possession of one of the keys listed in the **keyfile** which is by default `keyfile.txt`.
+optional arguments:
+  -h, --help            show this help message and exit
+  --keyfile KEYFILE     path to keyfile
+  --face                enable facial verification
+  --trusted_faces TRUSTED_FACES
+                        path to trusted faces
+  --bucket_name BUCKET_NAME
+                        AWS S3 bucket name for trusted faces
+  --bucket_object BUCKET_OBJECT
+                        name of object in S3 bucket
+```
 
 ## Wiring
 Garagepi is intended to be used for opening garage doors that are controlled by simply completing a circuit, though it could be used for anything that requires the quick toggling of a relay remotely.
@@ -77,5 +90,8 @@ Garagepi is intended to be used for opening garage doors that are controlled by 
 On any garage door opened like this there should be two connection points on the back for wires to be connected. Simply wire one of these points to each point on the relay channel 1, one to the middle and one to the normally closed point.
 ![Relay Wiring Example](https://github.com/Eliasin/garagepi/blob/master/relay.jpg)
 
+### Facial Verification
+The button used to trigger the camera module should be wired to pin 16 (board notation) and a ground pin. If pin 16 is unavailable for use, feel free to change the definition of `button_input_pin` in the main source file. 
+
 ## Planned Features
-* Facial recognition
+* Refactor and cleanup
