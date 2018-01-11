@@ -157,6 +157,14 @@ def initialize_trusted_keys(keyfile_path) -> List[str]:
         exit(errno.EACCES)
 
 
+def initialize_server_socket():
+    server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+    server_sock.bind(("", 0))
+    server_sock.listen(1)
+    server_sock.setblocking(0)
+
+    return server_sock
+
 def main() -> None:
     parser = initialize_arg_parser()
     args = parser.parse_args()
@@ -167,14 +175,10 @@ def main() -> None:
 
     uuid = "9d298d8d-06b4-4da5-b913-0440aa7b4c70"
 
-    server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-
     rekognition, trusted_faces, bucket_name, bucket_object = initialize_arg_flags(args)
     
     try:
-        server_sock.bind(("", 0))
-        server_sock.listen(1)
-        server_sock.setblocking(0)
+        server_sock = initialize_server_socket()
         bluetooth.advertise_service(server_sock, "garagepi", uuid)
         read_sockets = [server_sock]
 
