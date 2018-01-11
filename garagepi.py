@@ -146,7 +146,7 @@ def initialize_arg_parser() -> None:
     return parser
 
 
-def initialize_arg_flags(args) -> None:
+def initialize_arg_flag_dependents(args) -> None:
     rekognition = None
     trusted_faces = None
     bucket_name = None
@@ -224,7 +224,7 @@ def main() -> None:
 
     uuid = "9d298d8d-06b4-4da5-b913-0440aa7b4c70"
 
-    rekognition, trusted_faces, bucket_name, bucket_object = initialize_arg_flags(args)
+    rekognition, trusted_faces, bucket_name, bucket_object = initialize_arg_flag_dependents(args)
     
     facial_verification_strategy = get_facial_verification_strategy(bucket_name, bucket_object, trusted_faces)
 
