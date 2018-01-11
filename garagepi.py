@@ -107,7 +107,7 @@ def get_random_bytes(n: int) -> bytes:
     return os.urandom(n)
 
 
-def initializeGPIO() -> None:
+def initialize_GPIO() -> None:
     GPIO.setmode(GPIO.BOARD)
 
     GPIO.setup(relay_ch1_pin, GPIO.OUT)
@@ -115,7 +115,7 @@ def initializeGPIO() -> None:
     GPIO.output(relay_ch1_pin, GPIO.HIGH)
 
 
-def initializeArgParser():
+def initialize_arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--keyfile", help="path to keyfile", type=str)
     parser.add_argument("--face", help="enable facial verification", action="store_true")
@@ -126,7 +126,7 @@ def initializeArgParser():
     return parser
 
 
-def initializeArgFlags(args):
+def initialize_arg_flags(args):
     rekognition = None
     trusted_faces = None
     bucket_name = None
@@ -145,7 +145,7 @@ def initializeArgFlags(args):
     return rekognition, trusted_faces, bucket_name, bucket_object
 
 
-def initializeTrustedKeys(keyfile_path) -> List[str]:
+def initialize_trusted_keys(keyfile_path) -> List[str]:
     try:
         if keyfile_path is not None:
             return load_keyfile(args.keyfile)
@@ -158,18 +158,18 @@ def initializeTrustedKeys(keyfile_path) -> List[str]:
 
 
 def main() -> None:
-    parser = initializeArgParser()
+    parser = initialize_arg_parser()
     args = parser.parse_args()
     
-    initializeGPIO()
+    initialize_GPIO()
    
-    trusted_keys = initializeTrustedKeys(args.keyfile)
+    trusted_keys = initialize_trusted_keys(args.keyfile)
 
     uuid = "9d298d8d-06b4-4da5-b913-0440aa7b4c70"
 
     server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 
-    rekognition, trusted_faces, bucket_name, bucket_object = initializeArgFlags(args)
+    rekognition, trusted_faces, bucket_name, bucket_object = initialize_arg_flags(args)
     
     try:
         server_sock.bind(("", 0))
