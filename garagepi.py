@@ -18,6 +18,7 @@ relay_ch1_pin = 37
 
 face_similarity_threshold = 80.0
 
+
 class Button:
     def __init__(self, input_pin: int, pull_direction):
         GPIO.setup(input_pin, GPIO.IN, pull_up_down=pull_direction)
@@ -39,7 +40,7 @@ class Button:
         self.last_input = self.button_input
         self.button_input = GPIO.input(self.input_pin)
 
-        if self.button_input == False and self.last_input == True:
+        if not self.button_input and self.last_input:
             print("Button on input pin '{}' pressed".format(self.input_pin))
             self.pressed_callback()
 
@@ -61,6 +62,7 @@ def face_from_path(image_path: str):
         with open(image_path, "rb") as image:
             return image.read()
     except IOError as image_io_error:
+        print(image_io_error)
         return None
 
 
@@ -106,7 +108,7 @@ def get_camera_byte_data() -> bytes:
             return image_stream.read()
 
 
-def bucket_verify_camera_input(rekognition_client, bucket_name: str, bucket_object: str) ->  bool:
+def bucket_verify_camera_input(rekognition_client, bucket_name: str, bucket_object: str) -> bool:
     return bucket_verify_face(rekognition_client, get_camera_byte_data(), bucket_name, bucket_object)
 
 
@@ -128,35 +130,37 @@ def toggle_door() -> None:
     print("Toggled garage door")
 
 
-def initialize_GPIO() -> None:
+def initialize_gpio() -> None:
     GPIO.setmode(GPIO.BOARD)
 
     GPIO.setup(relay_ch1_pin, GPIO.OUT)
     GPIO.output(relay_ch1_pin, GPIO.HIGH)
 
 
-def initialize_arg_parser() -> None:
+def initialize_arg_parser():
     parser = argparse.ArgumentParser()
     
     parser.add_argument("--keyfile", help="path to keyfile", type=str)
     parser.add_argument("--face", help="enable facial verification", action="store_true") 
     
     facial_verification_strategy_group = parser.add_mutually_exclusive_group()
-    facial_verification_strategy_group.add_argument("--trusted_faces", help="path to trusted faces (implicity adds --face)", type=str)
-    facial_verification_strategy_group.add_argument("--bucket", help="AWS S3 bucket name and object pair for trusted faces (implicity adds --face)", type=str, nargs=2)
+    facial_verification_strategy_group.add_argument("--trusted_faces",
+                                                    help="path to trusted faces (implicitly adds --face)", type=str)
+    facial_verification_strategy_group.add_argument("--bucket",
+                                                    help="AWS S3 bucket name and object pair for trusted faces"
+                                                         " (implicitly adds --face)", type=str, nargs=2)
 
     return parser
 
 
 def initialize_arg_flag_dependents(args):
     rekognition = None
-    facial_verification_strategy = None
-    trusted_faces = args.trusted_faces
     bucket = args.bucket
 
     if args.bucket is not None and args.bucket[0] is not None and args.bucket[1] is not None:
         args.face = True
-        facial_verification_strategy = partial(bucket_verify_camera_input, bucket_name=bucket[0], bucket_object=bucket[1])
+        facial_verification_strategy = partial(bucket_verify_camera_input,
+                                               bucket_name=bucket[0], bucket_object=bucket[1])
     else:
         if args.trusted_faces is not None:
             args.face = True
@@ -174,16 +178,15 @@ def initialize_arg_flag_dependents(args):
 def initialize_trusted_keys(keyfile_path: str) -> List[str]:
     try:
         if keyfile_path is not None:
-            return load_keyfile(args.keyfile)
+            return load_keyfile(keyfile_path)
         else:
             return load_keyfile("keyfile.txt")
     except IOError as io_error:
         print_error(io_error)
-        trusted_keys = []
-        exit(errno.EACCES)
+        return []
 
 
-def initialize_server_socket() -> None:
+def initialize_server_socket():
     server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
     server_sock.bind(("", 0))
     server_sock.listen(1)
@@ -217,21 +220,22 @@ def main() -> None:
     parser = initialize_arg_parser()
     args = parser.parse_args()
     
-    initialize_GPIO()
+    initialize_gpio()
    
     trusted_keys = initialize_trusted_keys(args.keyfile)
 
     uuid = "9d298d8d-06b4-4da5-b913-0440aa7b4c70"
 
     rekognition, facial_verification_strategy = initialize_arg_flag_dependents(args)
-    
+
+    server_sock = initialize_server_socket()
     try:
-        server_sock = initialize_server_socket()
         bluetooth.advertise_service(server_sock, "garagepi", uuid)
         read_sockets = [server_sock]
 
         button_input_pin = 16
         button = Button(button_input_pin, GPIO.PUD_UP)
+
         def challenge_camera():
             if facial_verification_strategy(rekognition_client=rekognition):
                 print("Face accepted")
@@ -245,7 +249,7 @@ def main() -> None:
             select_timeout = 0.2
             readable, writable, errored = select.select(read_sockets, [], [], select_timeout)
             for socket in readable:
-                client_sock = server_sock.accept()[0]
+                client_sock = socket.accept()[0]
                 try:
                     challenge_client(client_sock, trusted_keys)
                 finally:
