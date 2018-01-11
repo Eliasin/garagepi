@@ -69,19 +69,18 @@ Note: This will have to be run every time the pi restarts, so you may want to pu
 ## Usage
 ```
 usage: garagepi.py [-h] [--keyfile KEYFILE] [--face]
-                   [--trusted_faces TRUSTED_FACES] [--bucket_name BUCKET_NAME]
-                   [--bucket_object BUCKET_OBJECT]
+                   [--trusted_faces TRUSTED_FACES | --bucket BUCKET BUCKET]
 
 optional arguments:
   -h, --help            show this help message and exit
   --keyfile KEYFILE     path to keyfile
   --face                enable facial verification
   --trusted_faces TRUSTED_FACES
-                        path to trusted faces
-  --bucket_name BUCKET_NAME
-                        AWS S3 bucket name for trusted faces
-  --bucket_object BUCKET_OBJECT
-                        name of object in S3 bucket
+                        path to trusted faces (implicity adds --face)
+  --bucket BUCKET BUCKET
+                        AWS S3 bucket name and object pair for trusted faces
+                        (implicity adds --face)
+
 ```
 
 ## Wiring
