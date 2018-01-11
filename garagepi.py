@@ -126,6 +126,25 @@ def initializeArgParser():
     return parser
 
 
+def initializeArgFlags(args):
+    rekognition = None
+    trusted_faces = None
+    bucket_name = None
+    bucket_object = None
+    if args.face:
+        rekognition = boto3.client("rekognition")
+        if args.trusted_faces is not None:
+            trusted_faces = path_to_face(args.trusted_faces)
+        else:
+            trusted_faces = path_to_face("trusted_faces.jpg")
+        
+        if args.bucket_name is not None and args.bucket_object is not None:
+            bucket_name = args.bucket_name
+            bucket_object = args.bucket_object
+    
+    return rekognition, trusted_faces, bucket_name, bucket_object
+
+
 def main() -> None:
     parser = initializeArgParser()
     args = parser.parse_args()
@@ -146,21 +165,8 @@ def main() -> None:
 
     server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 
-    rekognition = None
-    trusted_faces = None
-    bucket_name = None
-    bucket_object = None
-    if args.face:
-        rekognition = boto3.client("rekognition")
-        if args.trusted_faces is not None:
-            trusted_faces = path_to_face(args.trusted_faces)
-        else:
-            trusted_faces = path_to_face("trusted_faces.jpg")
-        
-        if args.bucket_name is not None and args.bucket_object is not None:
-            bucket_name = args.bucket_name
-            bucket_object = args.bucket_object
-
+    rekognition, trusted_faces, bucket_name, bucket_object = initializeArgFlags(args)
+    
     try:
         server_sock.bind(("", 0))
         server_sock.listen(1)
