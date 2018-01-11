@@ -257,7 +257,7 @@ def main() -> None:
                     try:
                         client_sock.close()
                     except AttributeError as e:
-                        print_error("Client socket allocaton failed")      
+                        print_error("Client socket allocation failed")      
     finally:
 
         try:
