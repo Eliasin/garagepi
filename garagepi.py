@@ -145,21 +145,25 @@ def initializeArgFlags(args):
     return rekognition, trusted_faces, bucket_name, bucket_object
 
 
+def initializeTrustedKeys(keyfile_path) -> List[str]:
+    try:
+        if keyfile_path is not None:
+            return load_keyfile(args.keyfile)
+        else:
+            return load_keyfile("keyfile.txt")
+    except IOError as io_error:
+        print_error(io_error)
+        trusted_keys = []
+        exit(errno.EACCES)
+
+
 def main() -> None:
     parser = initializeArgParser()
     args = parser.parse_args()
     
     initializeGPIO()
-
-    try:
-        if args.keyfile is not None:
-            trusted_keys = load_keyfile(args.keyfile)
-        else:
-            trusted_keys = load_keyfile("keyfile.txt")
-    except IOError as io_error:
-        print_error(io_error)
-        trusted_keys = []
-        exit(errno.EACCES)
+   
+    trusted_keys = initializeTrustedKeys(args.keyfile)
 
     uuid = "9d298d8d-06b4-4da5-b913-0440aa7b4c70"
 
