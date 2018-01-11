@@ -1,18 +1,17 @@
-import bluetooth
-import errno
-import sys
-import bcrypt
-import os
-import time
-import RPi.GPIO as GPIO
-import picamera
-import boto3
-from botocore.exceptions import ClientError
-from typing import List, Callable, Tuple
-import select
-import io
 import argparse
+import io
+import select
+import sys
+import time
 from functools import partial
+from typing import List, Callable
+
+import bcrypt
+import bluetooth
+import boto3
+import picamera
+import RPi.GPIO as GPIO
+from botocore.exceptions import ClientError
 
 relay_ch1_pin = 37
 
