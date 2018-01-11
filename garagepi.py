@@ -110,7 +110,7 @@ def bucket_verify_camera_input(rekognition_client, bucket_name, bucket_object) -
     return bucket_verify_face(rekognition_client, get_camera_byte_data(), bucket_name, bucket_object)
 
 
-def verify_camera_face(rekognition_client, trusted_faces) -> bool:
+def image_verify_camera_input(rekognition_client, trusted_faces) -> bool:
     return image_verify_face(rekognition_client, get_camera_byte_data(), trusted_faces)
 
 
@@ -215,7 +215,7 @@ def get_facial_verification_strategy(bucket_name, bucket_object, trusted_faces):
     if bucket_name is not None and bucket_object is not None:
         return partial(bucket_verify_camera_input, bucket_name=bucket_name, bucket_object=bucket_object)
     else:
-        return partial(verify_camera_face, trusted_faces=trusted_faces)
+        return partial(image_verify_camera_input, trusted_faces=trusted_faces)
 
 
 def main() -> None:
