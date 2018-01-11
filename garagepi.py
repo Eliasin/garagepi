@@ -115,7 +115,7 @@ def initializeGPIO() -> None:
     GPIO.output(relay_ch1_pin, GPIO.HIGH)
 
 
-def main() -> None:
+def initializeArgParser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--keyfile", help="path to keyfile", type=str)
     parser.add_argument("--face", help="enable facial verification", action="store_true")
@@ -123,6 +123,11 @@ def main() -> None:
     parser.add_argument("--bucket_name", help="AWS S3 bucket name for trusted faces", type=str)
     parser.add_argument("--bucket_object", help="name of object in S3 bucket", type=str)
 
+    return parser
+
+
+def main() -> None:
+    parser = initializeArgParser()
     args = parser.parse_args()
     
     initializeGPIO()
