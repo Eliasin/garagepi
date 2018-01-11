@@ -56,7 +56,7 @@ def load_keyfile(keyfile: str) -> List[str]:
     return keys
 
 
-def path_to_face(image_path: str):
+def face_from_path(image_path: str):
     try:
         with open(image_path, "rb") as image:
             return image.read()
@@ -158,9 +158,9 @@ def initialize_arg_flags(args):
     if args.face:
         rekognition = boto3.client("rekognition")
         if args.trusted_faces is not None:
-            trusted_faces = path_to_face(args.trusted_faces)
+            trusted_faces = face_from_path(args.trusted_faces)
         else:
-            trusted_faces = path_to_face("trusted_faces.jpg")
+            trusted_faces = face_from_path("trusted_faces.jpg")
         
         if args.bucket_name is not None and args.bucket_object is not None:
             bucket_name = args.bucket_name
