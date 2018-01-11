@@ -96,7 +96,7 @@ def verify_challenge(response: str, challenge: bytes, keys: List[str]) -> bool:
     return False
 
 
-def open_door():
+def toggle_door():
     GPIO.output(relay_ch1_pin, GPIO.LOW)
     time.sleep(0.5)
     GPIO.output(relay_ch1_pin, GPIO.HIGH)
@@ -169,13 +169,13 @@ def main() -> None:
                 if bucket_name is not None:
                     if verify_camera_face_against_bucket(rekognition, bucket_name, bucket_object):
                         print("Face accepted")
-                        open_door()
+                        toggle_door()
                     else:
                         print("Face rejected/AWS error")
                 else:
                     if verify_camera_face(rekognition, trusted_faces):
                         print("Face accepted")
-                        open_door()
+                        toggle_door()
                     else:
                         print("Face rejected/AWS error")
 
@@ -195,7 +195,7 @@ def main() -> None:
                         client_response = client_sock.recv(60)
                         if verify_challenge(client_response, challenge, trusted_keys):
                             print("Client {} completed challenge of {}.".format(client_address, challenge))
-                            open_door()
+                            toggle_door()
                         else:
                             print("Client {} failed challenge of {}.".format(client_address, challenge))
                     except bluetooth.btcommon.BluetoothError as e:
