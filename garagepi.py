@@ -165,6 +165,28 @@ def initialize_server_socket():
 
     return server_sock
 
+
+def challenge_client(client_sock, trusted_keys) -> None:
+    client_sock.settimeout(20)
+    client_address = client_sock.getpeername()
+    print("Accepted connection from {}".format(client_address))
+
+    challenge = bcrypt.gensalt()
+    client_sock.send(challenge)
+    print("Sent challenge of {} to {}.".format(challenge, client_address))
+
+    try:
+        client_response = client_sock.recv(60)
+        if verify_challenge(client_response, challenge, trusted_keys):
+            print("Client {} completed challenge of {}.".format(client_address, challenge))
+            toggle_door()
+        else:
+            print("Client {} failed challenge of {}.".format(client_address, challenge))
+    except bluetooth.btcommon.BluetoothError as e:
+        print_error(e)
+        print("Client {} timed out on challenge of {}.".format(client_address, challenge))
+
+
 def main() -> None:
     parser = initialize_arg_parser()
     args = parser.parse_args()
@@ -205,26 +227,9 @@ def main() -> None:
 
             readable, writable, errored = select.select(read_sockets, [], [], select_timeout)
             for socket in readable:
-                client_sock, client_address = server_sock.accept()
+                client_sock = server_sock.accept()[0]
                 try:
-                    client_address = client_sock.getpeername()
-                    client_sock.settimeout(20)
-                    print("Accepted connection from {}".format(client_address))
-
-                    challenge = bcrypt.gensalt()
-                    client_sock.send(challenge)
-                    print("Sent challenge of {} to {}.".format(challenge, client_address))
-
-                    try:
-                        client_response = client_sock.recv(60)
-                        if verify_challenge(client_response, challenge, trusted_keys):
-                            print("Client {} completed challenge of {}.".format(client_address, challenge))
-                            toggle_door()
-                        else:
-                            print("Client {} failed challenge of {}.".format(client_address, challenge))
-                    except bluetooth.btcommon.BluetoothError as e:
-                        print_error(e)
-                        print("Client {} timed out on challenge of {}.".format(client_address, challenge))
+                    challenge_client(client_sock, trusted_keys)
                 finally:
                     client_sock.close()
     finally:
