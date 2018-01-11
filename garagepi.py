@@ -142,8 +142,8 @@ def initialize_arg_parser() -> None:
     parser.add_argument("--face", help="enable facial verification", action="store_true") 
     
     facial_verification_strategy_group = parser.add_mutually_exclusive_group()
-    facial_verification_strategy_group.add_argument("--trusted_faces", help="path to trusted faces", type=str)
-    facial_verification_strategy_group.add_argument("--bucket", help="AWS S3 bucket name and object pair for trusted faces", type=str, nargs=2)
+    facial_verification_strategy_group.add_argument("--trusted_faces", help="path to trusted faces (implicity adds --face)", type=str)
+    facial_verification_strategy_group.add_argument("--bucket", help="AWS S3 bucket name and object pair for trusted faces (implicity adds --face)", type=str, nargs=2)
 
     return parser
 
@@ -155,9 +155,11 @@ def initialize_arg_flag_dependents(args):
     bucket = args.bucket
 
     if args.bucket is not None and args.bucket[0] is not None and args.bucket[1] is not None:
+        args.face = True
         facial_verification_strategy = partial(bucket_verify_camera_input, bucket_name=bucket[0], bucket_object=bucket[1])
     else:
         if args.trusted_faces is not None:
+            args.face = True
             trusted_faces = face_from_path(args.trusted_faces)
         else:
             trusted_faces = face_from_path("trusted_faces.jpg")
