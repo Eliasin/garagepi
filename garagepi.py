@@ -137,10 +137,13 @@ def initialize_GPIO() -> None:
 
 def initialize_arg_parser() -> None:
     parser = argparse.ArgumentParser()
+    
     parser.add_argument("--keyfile", help="path to keyfile", type=str)
-    parser.add_argument("--face", help="enable facial verification", action="store_true")
-    parser.add_argument("--trusted_faces", help="path to trusted faces", type=str)
-    parser.add_argument("--bucket_name", help="AWS S3 bucket name for trusted faces", type=str)
+    parser.add_argument("--face", help="enable facial verification", action="store_true") 
+    
+    facial_verification_strategy_group = parser.add_mutually_exclusive_group()
+    facial_verification_strategy_group.add_argument("--trusted_faces", help="path to trusted faces", type=str)
+    facial_verification_strategy_group.add_argument("--bucket_name", help="AWS S3 bucket name for trusted faces", type=str)
     parser.add_argument("--bucket_object", help="name of object in S3 bucket", type=str)
 
     return parser
