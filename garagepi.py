@@ -253,11 +253,17 @@ def main() -> None:
                     client_sock = socket.accept()[0]
                     challenge_client(client_sock, trusted_keys)
                 finally:
-                    client_sock.close()
-    
+
+                    try:
+                        client_sock.close()
+                    except AttributeError as e:
+                        print_error("Client socket allocaton failed")      
     finally:
-        if type(server_sock) is bluetooth.bluez.BluetoothSocket:
+
+        try:
             server_sock.close()
+        except AttributeError as e:
+            print_error("Server socket allocation failed")
 
 
 if __name__ == "__main__":
