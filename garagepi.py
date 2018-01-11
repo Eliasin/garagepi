@@ -64,7 +64,7 @@ def face_from_path(image_path: str):
         return None
 
 
-def verify_face(rekognition_client, source_faces, target_faces) -> bool:
+def image_verify_face(rekognition_client, source_faces, target_faces) -> bool:
     if rekognition_client is None:
         print("Facial verification disabled")
         return False
@@ -81,7 +81,7 @@ def verify_face(rekognition_client, source_faces, target_faces) -> bool:
         return False
 
 
-def verify_face_against_bucket(rekognition_client, source_faces, bucket_name, bucket_object) -> bool:
+def image_verify_face_against_bucket(rekognition_client, source_faces, bucket_name, bucket_object) -> bool:
     if rekognition_client is None:
         print("Facial verification disabled")
         return False
@@ -107,11 +107,11 @@ def get_camera_byte_data():
 
 
 def verify_camera_face_against_bucket(rekognition_client, bucket_name, bucket_object) ->  bool:
-    return verify_face_against_bucket(rekognition_client, get_camera_byte_data(), bucket_name, bucket_object)
+    return image_verify_face_against_bucket(rekognition_client, get_camera_byte_data(), bucket_name, bucket_object)
 
 
 def verify_camera_face(rekognition_client, trusted_faces) -> bool:
-    return verify_face(rekognition_client, get_camera_byte_data(), trusted_faces)
+    return image_verify_face(rekognition_client, get_camera_byte_data(), trusted_faces)
 
 
 def verify_challenge(response: str, challenge: bytes, keys: List[str]) -> bool:
