@@ -15,7 +15,6 @@ import argparse
 from functools import partial
 
 relay_ch1_pin = 37
-button_input_pin = 16
 
 select_timeout = 0.2
 
@@ -23,6 +22,7 @@ face_similarity_threshold = 80.0
 
 class Button:
     def __init__(self, input_pin, pull_direction):
+        GPIO.setup(input_pin, GPIO.IN, pull_up_down=pull_direction)
         self.input_pin = input_pin
 
         if pull_direction == GPIO.PUD_UP:
@@ -82,6 +82,7 @@ def verify_face(rekognition_client, source_faces, target_faces) -> bool:
         print_error(e)
         return False
 
+
 def verify_face_against_bucket(rekognition_client, source_faces, bucket_name, bucket_object) -> bool:
     if rekognition_client is None:
         print("Facial verification disabled")
@@ -137,7 +138,6 @@ def initialize_GPIO() -> None:
     GPIO.setmode(GPIO.BOARD)
 
     GPIO.setup(relay_ch1_pin, GPIO.OUT)
-    GPIO.setup(button_input_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.output(relay_ch1_pin, GPIO.HIGH)
 
 
@@ -239,16 +239,14 @@ def main() -> None:
         bluetooth.advertise_service(server_sock, "garagepi", uuid)
         read_sockets = [server_sock]
 
+        button_input_pin = 16
         button = Button(button_input_pin, GPIO.PUD_UP)
-
         def challenge_camera():
             if facial_verification_strategy(rekognition_client=rekognition):
                 print("Face accepted")
                 toggle_door()
             else:
                 print("Face rejected/AWS error")
-
-
         button.set_pressed_callback(challenge_camera)
 
         while True:
@@ -260,6 +258,7 @@ def main() -> None:
                     challenge_client(client_sock, trusted_keys)
                 finally:
                     client_sock.close()
+    
     finally:
         server_sock.close()
 
