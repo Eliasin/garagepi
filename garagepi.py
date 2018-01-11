@@ -107,6 +107,14 @@ def get_random_bytes(n: int) -> bytes:
     return os.urandom(n)
 
 
+def initializeGPIO() -> None:
+    GPIO.setmode(GPIO.BOARD)
+
+    GPIO.setup(relay_ch1_pin, GPIO.OUT)
+    GPIO.setup(button_input_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.output(relay_ch1_pin, GPIO.HIGH)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--keyfile", help="path to keyfile", type=str)
@@ -116,12 +124,9 @@ def main() -> None:
     parser.add_argument("--bucket_object", help="name of object in S3 bucket", type=str)
 
     args = parser.parse_args()
+    
+    initializeGPIO()
 
-    GPIO.setmode(GPIO.BOARD)
-
-    GPIO.setup(relay_ch1_pin, GPIO.OUT)
-    GPIO.setup(button_input_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.output(relay_ch1_pin, GPIO.HIGH)
     try:
         if args.keyfile is not None:
             trusted_keys = load_keyfile(args.keyfile)
