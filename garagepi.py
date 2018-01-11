@@ -106,7 +106,7 @@ def get_camera_byte_data():
             return image_stream.read()
 
 
-def verify_camera_face_against_bucket(rekognition_client, bucket_name, bucket_object) ->  bool:
+def bucket_verify_camera_input(rekognition_client, bucket_name, bucket_object) ->  bool:
     return bucket_verify_face(rekognition_client, get_camera_byte_data(), bucket_name, bucket_object)
 
 
@@ -213,7 +213,7 @@ def challenge_client(client_sock, trusted_keys) -> None:
 
 def get_facial_verification_strategy(bucket_name, bucket_object, trusted_faces):
     if bucket_name is not None and bucket_object is not None:
-        return partial(verify_camera_face_against_bucket, bucket_name=bucket_name, bucket_object=bucket_object)
+        return partial(bucket_verify_camera_input, bucket_name=bucket_name, bucket_object=bucket_object)
     else:
         return partial(verify_camera_face, trusted_faces=trusted_faces)
 
