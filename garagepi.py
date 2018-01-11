@@ -228,8 +228,9 @@ def main() -> None:
 
     rekognition, facial_verification_strategy = initialize_arg_flag_dependents(args)
 
-    server_sock = initialize_server_socket()
     try:
+        server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+        server_sock = initialize_server_socket()
         bluetooth.advertise_service(server_sock, "garagepi", uuid)
         read_sockets = [server_sock]
 
