@@ -12,6 +12,7 @@ from typing import List
 import select
 import io
 import argparse
+from functools import partial
 
 relay_ch1_pin = 37
 button_input_pin = 16
@@ -212,6 +213,13 @@ def challenge_client(client_sock, trusted_keys) -> None:
         print("Client {} timed out on challenge of {}.".format(client_address, challenge))
 
 
+def get_facial_verification_strategy(bucket_name, bucket_object, trusted_faces):
+    if bucket_name is not None and bucket_object is not None:
+        return partial(verify_camera_face_against_bucket, bucket_name=bucket_name, bucket_object=bucket_object)
+    else:
+        return partial(verify_camera_face, trusted_faces=trusted_faces)
+
+
 def main() -> None:
     parser = initialize_arg_parser()
     args = parser.parse_args()
@@ -224,6 +232,8 @@ def main() -> None:
 
     rekognition, trusted_faces, bucket_name, bucket_object = initialize_arg_flags(args)
     
+    facial_verification_strategy = get_facial_verification_strategy(bucket_name, bucket_object, trusted_faces)
+
     try:
         server_sock = initialize_server_socket()
         bluetooth.advertise_service(server_sock, "garagepi", uuid)
@@ -232,18 +242,11 @@ def main() -> None:
         button = Button(button_input_pin, GPIO.PUD_UP)
 
         def challenge_camera():
-            if bucket_name is not None:
-                if verify_camera_face_against_bucket(rekognition, bucket_name, bucket_object):
-                    print("Face accepted")
-                    toggle_door()
-                else:
-                    print("Face rejected/AWS error")
+            if facial_verification_strategy(rekognition_client=rekognition):
+                print("Face accepted")
+                toggle_door()
             else:
-                if verify_camera_face(rekognition, trusted_faces):
-                    print("Face accepted")
-                    toggle_door()
-                else:
-                    print("Face rejected/AWS error")
+                print("Face rejected/AWS error")
 
 
         button.set_pressed_callback(challenge_camera)
