@@ -8,7 +8,7 @@ import RPi.GPIO as GPIO
 import picamera
 import boto3
 from botocore.exceptions import ClientError
-from typing import List
+from typing import List, Callable
 import select
 import io
 import argparse
@@ -19,7 +19,7 @@ relay_ch1_pin = 37
 face_similarity_threshold = 80.0
 
 class Button:
-    def __init__(self, input_pin, pull_direction):
+    def __init__(self, input_pin: int, pull_direction):
         GPIO.setup(input_pin, GPIO.IN, pull_up_down=pull_direction)
         self.input_pin = input_pin
 
@@ -32,10 +32,10 @@ class Button:
         self.last_input = False
         self.button_input = False
 
-    def set_pressed_callback(self, callback):
+    def set_pressed_callback(self, callback: Callable) -> None:
         self.pressed_callback = callback
 
-    def poll(self):
+    def poll(self) -> None:
         self.last_input = self.button_input
         self.button_input = GPIO.input(self.input_pin)
 
@@ -64,7 +64,7 @@ def face_from_path(image_path: str):
         return None
 
 
-def image_verify_face(rekognition_client, source_faces, target_faces) -> bool:
+def image_verify_face(rekognition_client, source_faces: bytes, target_faces: bytes) -> bool:
     if rekognition_client is None:
         print("Facial verification disabled")
         return False
@@ -81,7 +81,7 @@ def image_verify_face(rekognition_client, source_faces, target_faces) -> bool:
         return False
 
 
-def bucket_verify_face(rekognition_client, source_faces, bucket_name, bucket_object) -> bool:
+def bucket_verify_face(rekognition_client, source_faces: bytes, bucket_name: str, bucket_object: str) -> bool:
     if rekognition_client is None:
         print("Facial verification disabled")
         return False
@@ -98,7 +98,7 @@ def bucket_verify_face(rekognition_client, source_faces, bucket_name, bucket_obj
         return False
 
 
-def get_camera_byte_data():
+def get_camera_byte_data() -> bytes:
     with picamera.PiCamera(resolution=(512, 512)) as camera:
         with io.BytesIO() as image_stream:
             camera.capture(image_stream, "jpeg")
@@ -106,11 +106,11 @@ def get_camera_byte_data():
             return image_stream.read()
 
 
-def bucket_verify_camera_input(rekognition_client, bucket_name, bucket_object) ->  bool:
+def bucket_verify_camera_input(rekognition_client, bucket_name: str, bucket_object: str) ->  bool:
     return bucket_verify_face(rekognition_client, get_camera_byte_data(), bucket_name, bucket_object)
 
 
-def image_verify_camera_input(rekognition_client, trusted_faces) -> bool:
+def image_verify_camera_input(rekognition_client, trusted_faces: bytes) -> bool:
     return image_verify_face(rekognition_client, get_camera_byte_data(), trusted_faces)
 
 
@@ -121,7 +121,7 @@ def verify_challenge(response: str, challenge: bytes, keys: List[str]) -> bool:
     return False
 
 
-def toggle_door():
+def toggle_door() -> None:
     GPIO.output(relay_ch1_pin, GPIO.LOW)
     time.sleep(0.5)
     GPIO.output(relay_ch1_pin, GPIO.HIGH)
@@ -135,7 +135,7 @@ def initialize_GPIO() -> None:
     GPIO.output(relay_ch1_pin, GPIO.HIGH)
 
 
-def initialize_arg_parser():
+def initialize_arg_parser() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--keyfile", help="path to keyfile", type=str)
     parser.add_argument("--face", help="enable facial verification", action="store_true")
@@ -146,7 +146,7 @@ def initialize_arg_parser():
     return parser
 
 
-def initialize_arg_flags(args):
+def initialize_arg_flags(args) -> None:
     rekognition = None
     trusted_faces = None
     bucket_name = None
@@ -165,7 +165,7 @@ def initialize_arg_flags(args):
     return rekognition, trusted_faces, bucket_name, bucket_object
 
 
-def initialize_trusted_keys(keyfile_path) -> List[str]:
+def initialize_trusted_keys(keyfile_path: str) -> List[str]:
     try:
         if keyfile_path is not None:
             return load_keyfile(args.keyfile)
@@ -177,7 +177,7 @@ def initialize_trusted_keys(keyfile_path) -> List[str]:
         exit(errno.EACCES)
 
 
-def initialize_server_socket():
+def initialize_server_socket() -> None:
     server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
     server_sock.bind(("", 0))
     server_sock.listen(1)
@@ -186,7 +186,7 @@ def initialize_server_socket():
     return server_sock
 
 
-def challenge_client(client_sock, trusted_keys) -> None:
+def challenge_client(client_sock, trusted_keys: List[str]) -> None:
     client_sock.settimeout(20)
     client_address = client_sock.getpeername()
     print("Accepted connection from {}".format(client_address))
@@ -207,7 +207,7 @@ def challenge_client(client_sock, trusted_keys) -> None:
         print("Client {} timed out on challenge of {}.".format(client_address, challenge))
 
 
-def get_facial_verification_strategy(bucket_name, bucket_object, trusted_faces):
+def get_facial_verification_strategy(bucket_name: str, bucket_object: str, trusted_faces: bytes) -> Callable:
     if bucket_name is not None and bucket_object is not None:
         return partial(bucket_verify_camera_input, bucket_name=bucket_name, bucket_object=bucket_object)
     else:
