@@ -8,7 +8,7 @@ import RPi.GPIO as GPIO
 import picamera
 import boto3
 from botocore.exceptions import ClientError
-from typing import List, Callable
+from typing import List, Callable, Tuple
 import select
 import io
 import argparse
@@ -143,17 +143,15 @@ def initialize_arg_parser() -> None:
     
     facial_verification_strategy_group = parser.add_mutually_exclusive_group()
     facial_verification_strategy_group.add_argument("--trusted_faces", help="path to trusted faces", type=str)
-    facial_verification_strategy_group.add_argument("--bucket_name", help="AWS S3 bucket name for trusted faces", type=str)
-    parser.add_argument("--bucket_object", help="name of object in S3 bucket", type=str)
+    facial_verification_strategy_group.add_argument("--bucket", help="AWS S3 bucket name and object pair for trusted faces", type=str, nargs=2)
 
     return parser
 
 
-def initialize_arg_flag_dependents(args) -> None:
+def initialize_arg_flag_dependents(args):
     rekognition = None
     trusted_faces = None
-    bucket_name = None
-    bucket_object = None
+    bucket = None
     if args.face:
         rekognition = boto3.client("rekognition")
         if args.trusted_faces is not None:
@@ -161,11 +159,10 @@ def initialize_arg_flag_dependents(args) -> None:
         else:
             trusted_faces = face_from_path("trusted_faces.jpg")
         
-        if args.bucket_name is not None and args.bucket_object is not None:
-            bucket_name = args.bucket_name
-            bucket_object = args.bucket_object
+        if args.bucket[0] is not None and args.bucket[1] is not None:
+            bucket = args.bucket
     
-    return rekognition, trusted_faces, bucket_name, bucket_object
+    return rekognition, trusted_faces, bucket
 
 
 def initialize_trusted_keys(keyfile_path: str) -> List[str]:
@@ -210,9 +207,9 @@ def challenge_client(client_sock, trusted_keys: List[str]) -> None:
         print("Client {} timed out on challenge of {}.".format(client_address, challenge))
 
 
-def get_facial_verification_strategy(bucket_name: str, bucket_object: str, trusted_faces: bytes) -> Callable:
-    if bucket_name is not None and bucket_object is not None:
-        return partial(bucket_verify_camera_input, bucket_name=bucket_name, bucket_object=bucket_object)
+def get_facial_verification_strategy(bucket: Tuple[str, str], trusted_faces: bytes) -> Callable:
+    if bucket[0] is not None and bucket[0] is not None:
+        return partial(bucket_verify_camera_input, bucket_name=bucket[0], bucket_object=bucket[1])
     else:
         return partial(image_verify_camera_input, trusted_faces=trusted_faces)
 
@@ -227,9 +224,9 @@ def main() -> None:
 
     uuid = "9d298d8d-06b4-4da5-b913-0440aa7b4c70"
 
-    rekognition, trusted_faces, bucket_name, bucket_object = initialize_arg_flag_dependents(args)
+    rekognition, trusted_faces, bucket = initialize_arg_flag_dependents(args)
     
-    facial_verification_strategy = get_facial_verification_strategy(bucket_name, bucket_object, trusted_faces)
+    facial_verification_strategy = get_facial_verification_strategy(bucket, trusted_faces)
 
     try:
         server_sock = initialize_server_socket()
