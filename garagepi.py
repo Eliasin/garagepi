@@ -150,19 +150,23 @@ def initialize_arg_parser() -> None:
 
 def initialize_arg_flag_dependents(args):
     rekognition = None
-    trusted_faces = None
-    bucket = None
-    if args.face:
-        rekognition = boto3.client("rekognition")
+    facial_verification_strategy = None
+    trusted_faces = args.trusted_faces
+    bucket = args.bucket
+
+    if args.bucket is not None and args.bucket[0] is not None and args.bucket[1] is not None:
+        facial_verification_strategy = partial(bucket_verify_camera_input, bucket_name=bucket[0], bucket_object=bucket[1])
+    else:
         if args.trusted_faces is not None:
             trusted_faces = face_from_path(args.trusted_faces)
         else:
             trusted_faces = face_from_path("trusted_faces.jpg")
-        
-        if args.bucket[0] is not None and args.bucket[1] is not None:
-            bucket = args.bucket
+        facial_verification_strategy = partial(image_verify_camera_input, trusted_faces=trusted_faces)
     
-    return rekognition, trusted_faces, bucket
+    if args.face:
+        rekognition = boto3.client("rekognition")
+      
+    return rekognition, facial_verification_strategy
 
 
 def initialize_trusted_keys(keyfile_path: str) -> List[str]:
@@ -207,13 +211,6 @@ def challenge_client(client_sock, trusted_keys: List[str]) -> None:
         print("Client {} timed out on challenge of {}.".format(client_address, challenge))
 
 
-def get_facial_verification_strategy(bucket: Tuple[str, str], trusted_faces: bytes) -> Callable:
-    if bucket[0] is not None and bucket[0] is not None:
-        return partial(bucket_verify_camera_input, bucket_name=bucket[0], bucket_object=bucket[1])
-    else:
-        return partial(image_verify_camera_input, trusted_faces=trusted_faces)
-
-
 def main() -> None:
     parser = initialize_arg_parser()
     args = parser.parse_args()
@@ -224,10 +221,8 @@ def main() -> None:
 
     uuid = "9d298d8d-06b4-4da5-b913-0440aa7b4c70"
 
-    rekognition, trusted_faces, bucket = initialize_arg_flag_dependents(args)
+    rekognition, facial_verification_strategy = initialize_arg_flag_dependents(args)
     
-    facial_verification_strategy = get_facial_verification_strategy(bucket, trusted_faces)
-
     try:
         server_sock = initialize_server_socket()
         bluetooth.advertise_service(server_sock, "garagepi", uuid)
