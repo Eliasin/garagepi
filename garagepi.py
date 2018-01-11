@@ -20,6 +20,31 @@ select_timeout = 0.2
 
 face_similarity_threshold = 80.0
 
+class Button:
+    def __init__(self, input_pin, pull_direction):
+        self.input_pin = input_pin
+
+        if pull_direction == GPIO.PUD_UP:
+            self.pressed_state = True
+        else:
+            self.pressed_state = False
+
+        self.pressed_callback = None
+        self.last_input = False
+        self.button_input = False
+
+    def set_pressed_callback(self, callback):
+        self.pressed_callback = callback
+
+    def poll(self):
+        self.last_input = self.button_input
+        self.button_input = GPIO.input(self.input_pin)
+
+        if self.button_input == False and self.last_input == True:
+            print("Button on input pin '{}' pressed".format(self.input_pin))
+            self.pressed_callback()
+
+
 def print_error(*args, **kwargs) -> None:
     print(*args, file=sys.stderr, **kwargs)
 
@@ -204,27 +229,27 @@ def main() -> None:
         bluetooth.advertise_service(server_sock, "garagepi", uuid)
         read_sockets = [server_sock]
 
-        last_button_input = False
-        button_input = False
-        while True:
-            
-            last_button_input = button_input
-            button_input = GPIO.input(16)
-            if button_input == False and last_button_input == True:
-                print("Button input detected")
-                if bucket_name is not None:
-                    if verify_camera_face_against_bucket(rekognition, bucket_name, bucket_object):
-                        print("Face accepted")
-                        toggle_door()
-                    else:
-                        print("Face rejected/AWS error")
-                else:
-                    if verify_camera_face(rekognition, trusted_faces):
-                        print("Face accepted")
-                        toggle_door()
-                    else:
-                        print("Face rejected/AWS error")
+        button = Button(button_input_pin, GPIO.PUD_UP)
 
+        def challenge_camera():
+            if bucket_name is not None:
+                if verify_camera_face_against_bucket(rekognition, bucket_name, bucket_object):
+                    print("Face accepted")
+                    toggle_door()
+                else:
+                    print("Face rejected/AWS error")
+            else:
+                if verify_camera_face(rekognition, trusted_faces):
+                    print("Face accepted")
+                    toggle_door()
+                else:
+                    print("Face rejected/AWS error")
+
+
+        button.set_pressed_callback(challenge_camera)
+
+        while True:
+            button.poll()
             readable, writable, errored = select.select(read_sockets, [], [], select_timeout)
             for socket in readable:
                 client_sock = server_sock.accept()[0]
