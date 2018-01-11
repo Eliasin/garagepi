@@ -128,10 +128,6 @@ def toggle_door():
     print("Toggled garage door")
 
 
-def get_random_bytes(n: int) -> bytes:
-    return os.urandom(n)
-
-
 def initialize_GPIO() -> None:
     GPIO.setmode(GPIO.BOARD)
 
