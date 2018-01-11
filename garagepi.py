@@ -229,7 +229,6 @@ def main() -> None:
     rekognition, facial_verification_strategy = initialize_arg_flag_dependents(args)
 
     try:
-        server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         server_sock = initialize_server_socket()
         bluetooth.advertise_service(server_sock, "garagepi", uuid)
         read_sockets = [server_sock]
@@ -250,14 +249,15 @@ def main() -> None:
             select_timeout = 0.2
             readable, writable, errored = select.select(read_sockets, [], [], select_timeout)
             for socket in readable:
-                client_sock = socket.accept()[0]
                 try:
+                    client_sock = socket.accept()[0]
                     challenge_client(client_sock, trusted_keys)
                 finally:
                     client_sock.close()
     
     finally:
-        server_sock.close()
+        if type(server_sock) is bluetooth.bluez.BluetoothSocket:
+            server_sock.close()
 
 
 if __name__ == "__main__":
