@@ -16,8 +16,6 @@ from functools import partial
 
 relay_ch1_pin = 37
 
-select_timeout = 0.2
-
 face_similarity_threshold = 80.0
 
 class Button:
@@ -251,6 +249,7 @@ def main() -> None:
 
         while True:
             button.poll()
+            select_timeout = 0.2
             readable, writable, errored = select.select(read_sockets, [], [], select_timeout)
             for socket in readable:
                 client_sock = server_sock.accept()[0]
